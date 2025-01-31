@@ -10,180 +10,180 @@
 // Define a struct to hold RGB values
 struct RGB
 {
-  int r;
-  int g;
-  int b;
+  int R;
+  int G;
+  int B;
 };
 
 // Function to calculate the Euclidean distance between two colors
-double colorDistance(const RGB &c1, const RGB &c2)
+double ColorDistance(const RGB &C1, const RGB &C2)
 {
-  return std::sqrt(std::pow(c1.r - c2.r, 2) + std::pow(c1.g - c2.g, 2) + std::pow(c1.b - c2.b, 2));
+  return std::sqrt(std::pow(C1.R - C2.R, 2) + std::pow(C1.G - C2.G, 2) + std::pow(C1.B - C2.B, 2));
 }
 
 // Function to capture the current color of the pixel at (x, y)
-RGB captureCurrentColour(int x, int y)
+RGB CaptureCurrentColour(int X, int Y)
 {
-  HDC hdc = GetDC(NULL);                // Get the device context for the entire screen
-  COLORREF color = GetPixel(hdc, x, y); // Get the color of the pixel at (x, y)
-  ReleaseDC(NULL, hdc);                 // Release the device context
+  HDC Hdc = GetDC(NULL);                // Get the device context for the entire screen
+  COLORREF Color = GetPixel(Hdc, X, Y); // Get the color of the pixel at (x, y)
+  ReleaseDC(NULL, Hdc);                 // Release the device context
 
-  RGB rgb;
-  rgb.r = GetRValue(color);
-  rgb.g = GetGValue(color);
-  rgb.b = GetBValue(color);
-  return rgb;
+  RGB Rgb;
+  Rgb.R = GetRValue(Color);
+  Rgb.G = GetGValue(Color);
+  Rgb.B = GetBValue(Color);
+  return Rgb;
 }
 
 // Function to get the coordinates of the middle of the screen
-void getMiddleScreenCoords(int &x, int &y)
+void GetMiddleScreenCoords(int &X, int &Y)
 {
-  x = GetSystemMetrics(SM_CXSCREEN) / 2;
-  y = GetSystemMetrics(SM_CYSCREEN) / 2;
+  X = GetSystemMetrics(SM_CXSCREEN) / 2;
+  Y = GetSystemMetrics(SM_CYSCREEN) / 2;
 }
 
 // Global variables
-HHOOK hHook = NULL;
-bool f2Pressed = false;
-HWND overlayWindow = NULL;
+HHOOK HHook = NULL;
+bool F2Pressed = false;
+HWND OverlayWindow = NULL;
 
 // Low-level keyboard hook callback function
-LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK LowLevelKeyboardProc(int NCode, WPARAM WParam, LPARAM LParam)
 {
-  if (nCode == HC_ACTION)
+  if (NCode == HC_ACTION)
   {
-    KBDLLHOOKSTRUCT *pKeyboard = (KBDLLHOOKSTRUCT *)lParam;
-    if (wParam == WM_KEYDOWN && pKeyboard->vkCode == VK_F2)
+    KBDLLHOOKSTRUCT *PKeyboard = (KBDLLHOOKSTRUCT *)LParam;
+    if (WParam == WM_KEYDOWN && PKeyboard->vkCode == VK_F2)
     {
-      f2Pressed = true;
+      F2Pressed = true;
     }
-    else if (wParam == WM_KEYUP && pKeyboard->vkCode == VK_F2)
+    else if (WParam == WM_KEYUP && PKeyboard->vkCode == VK_F2)
     {
-      f2Pressed = false;
+      F2Pressed = false;
     }
   }
-  return CallNextHookEx(hHook, nCode, wParam, lParam);
+  return CallNextHookEx(HHook, NCode, WParam, LParam);
 }
 
 // Function to set up the low-level keyboard hook
 void SetHook()
 {
-  hHook = SetWindowsHookEx(WH_KEYBOARD_LL, LowLevelKeyboardProc, NULL, 0);
+  HHook = SetWindowsHookEx(WH_KEYBOARD_LL, LowLevelKeyboardProc, NULL, 0);
 }
 
 // Function to remove the low-level keyboard hook
 void RemoveHook()
 {
-  UnhookWindowsHookEx(hHook);
+  UnhookWindowsHookEx(HHook);
 }
 
 // Function to simulate a left mouse click
 void SimulateLeftClick()
 {
-  INPUT inputs[2] = {};
+  INPUT Inputs[2] = {};
 
   // Mouse down event
-  inputs[0].type = INPUT_MOUSE;
-  inputs[0].mi.dwFlags = MOUSEEVENTF_LEFTDOWN;
+  Inputs[0].type = INPUT_MOUSE;
+  Inputs[0].mi.dwFlags = MOUSEEVENTF_LEFTDOWN;
 
   // Mouse up event
-  inputs[1].type = INPUT_MOUSE;
-  inputs[1].mi.dwFlags = MOUSEEVENTF_LEFTUP;
+  Inputs[1].type = INPUT_MOUSE;
+  Inputs[1].mi.dwFlags = MOUSEEVENTF_LEFTUP;
 
   // Send the mouse down event
-  SendInput(1, &inputs[0], sizeof(INPUT));
+  SendInput(1, &Inputs[0], sizeof(INPUT));
   // Wait for 10 milliseconds
   Sleep(10);
   // Send the mouse up event
-  SendInput(1, &inputs[1], sizeof(INPUT));
+  SendInput(1, &Inputs[1], sizeof(INPUT));
 }
 
 // Function to create an always-on-top overlay window
 HWND CreateOverlayWindow()
 {
-  WNDCLASSW wc = {0};
-  wc.lpfnWndProc = DefWindowProcW;
-  wc.hInstance = GetModuleHandle(NULL);
-  wc.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);
-  wc.lpszClassName = L"OverlayWindow";
+  WNDCLASSW Wc = {0};
+  Wc.lpfnWndProc = DefWindowProcW;
+  Wc.hInstance = GetModuleHandle(NULL);
+  Wc.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);
+  Wc.lpszClassName = L"OverlayWindow";
 
-  RegisterClassW(&wc);
+  RegisterClassW(&Wc);
 
-  HWND hwnd = CreateWindowExW(
+  HWND Hwnd = CreateWindowExW(
       WS_EX_TOPMOST | WS_EX_LAYERED | WS_EX_TRANSPARENT,
-      wc.lpszClassName,
+      Wc.lpszClassName,
       L"Overlay",
       WS_POPUP,
       0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN),
-      NULL, NULL, wc.hInstance, NULL);
+      NULL, NULL, Wc.hInstance, NULL);
 
-  SetLayeredWindowAttributes(hwnd, RGB(255, 255, 255), 0, LWA_COLORKEY);
+  SetLayeredWindowAttributes(Hwnd, RGB(255, 255, 255), 0, LWA_COLORKEY);
 
-  ShowWindow(hwnd, SW_SHOW);
-  return hwnd;
+  ShowWindow(Hwnd, SW_SHOW);
+  return Hwnd;
 }
 
 // Function to draw a hollow red box on the overlay window
-void DrawHollowRedBox(HWND hwnd, int x, int y, int width, int height)
+void DrawHollowRedBox(HWND Hwnd, int X, int Y, int Width, int Height)
 {
-  HDC hdc = GetDC(hwnd);
-  HBRUSH brush = CreateSolidBrush(RGB(255, 0, 0));
-  RECT rect = {x, y, x + width, y + height};
-  FrameRect(hdc, &rect, brush);
-  DeleteObject(brush);
-  ReleaseDC(hwnd, hdc);
+  HDC Hdc = GetDC(Hwnd);
+  HBRUSH Brush = CreateSolidBrush(RGB(255, 0, 0));
+  RECT Rect = {X, Y, X + Width, Y + Height};
+  FrameRect(Hdc, &Rect, Brush);
+  DeleteObject(Brush);
+  ReleaseDC(Hwnd, Hdc);
 }
 
 int main()
 {
-  int x, y;
-  getMiddleScreenCoords(x, y);
+  int X, Y;
+  GetMiddleScreenCoords(X, Y);
 
-  RGB previousColor = captureCurrentColour(x, y);
-  std::cout << "Initial color at (" << x << ", " << y << ") - R: " << previousColor.r << ", G: " << previousColor.g << ", B: " << previousColor.b << std::endl;
+  RGB PreviousColor = CaptureCurrentColour(X, Y);
+  std::cout << "Initial color at (" << X << ", " << Y << ") - R: " << PreviousColor.R << ", G: " << PreviousColor.G << ", B: " << PreviousColor.B << std::endl;
 
-  const double threshold = 10.0; // Threshold for color change detection
+  const double Threshold = 10.0; // Threshold for color change detection
 
   // Set the hook
   SetHook();
 
   // Create the overlay window
-  overlayWindow = CreateOverlayWindow();
+  OverlayWindow = CreateOverlayWindow();
 
   // Message loop to keep the hook and overlay active
-  MSG msg;
+  MSG Msg;
   while (true)
   {
-    while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+    while (PeekMessage(&Msg, NULL, 0, 0, PM_REMOVE))
     {
-      TranslateMessage(&msg);
-      DispatchMessage(&msg);
+      TranslateMessage(&Msg);
+      DispatchMessage(&Msg);
     }
 
-    if (f2Pressed)
+    if (F2Pressed)
     {                                                         // Check if F2 key is held down
-      auto start = std::chrono::high_resolution_clock::now(); // Start time
+      auto Start = std::chrono::high_resolution_clock::now(); // Start time
 
-      RGB currentColor = captureCurrentColour(x, y);
-      double distance = colorDistance(currentColor, previousColor);
-      if (distance > threshold)
+      RGB CurrentColor = CaptureCurrentColour(X, Y);
+      double Distance = ColorDistance(CurrentColor, PreviousColor);
+      if (Distance > Threshold)
       {
         SimulateLeftClick();
-        std::cout << "Color changed at (" << x << ", " << y << ") - R: " << currentColor.r << ", G: " << currentColor.g << ", B: " << currentColor.b << std::endl;
-        previousColor = currentColor; // Update the previous color to the current color
+        std::cout << "Color changed at (" << X << ", " << Y << ") - R: " << CurrentColor.R << ", G: " << CurrentColor.G << ", B: " << CurrentColor.B << std::endl;
+        PreviousColor = CurrentColor; // Update the previous color to the current color
       }
       else
       {
         std::cout << "Color has not changed significantly." << std::endl;
       }
 
-      auto end = std::chrono::high_resolution_clock::now();            // End time
-      std::chrono::duration<double, std::milli> elapsed = end - start; // Calculate elapsed time
-      std::cout << "Color check took " << elapsed.count() << " ms" << std::endl;
+      auto End = std::chrono::high_resolution_clock::now();            // End time
+      std::chrono::duration<double, std::milli> Elapsed = End - Start; // Calculate elapsed time
+      std::cout << "Color check took " << Elapsed.count() << " ms" << std::endl;
     }
 
     // Draw the hollow red box on the overlay window
-    DrawHollowRedBox(overlayWindow, x - 50, y - 50, 100, 100);
+    DrawHollowRedBox(OverlayWindow, X - 50, Y - 50, 100, 100);
 
     Sleep(10); // Wait for 10 milliseconds before checking again
   }
